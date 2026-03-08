@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Sequential BATTing Algorithm</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 100%; height: 100%; overflow: auto; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: #fff; }
+  svg { display: block; margin: 0 auto; }
+  /* Tooltip */
+  .node:hover rect, .node:hover path { filter: brightness(0.95); }
+  a.ref-link { fill: #1a4480; text-decoration: underline; cursor: pointer; }
+  a.ref-link:hover { fill: #0050a0; }
+</style>
+</head>
+<body>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 1500" width="1400" height="1500" style="max-width:100%;height:auto;">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#555"/>
+    </marker>
+    <marker id="arrow-green" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#4a8c3f"/>
+    </marker>
+    <marker id="arrow-orange" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#cc6600"/>
+    </marker>
+    <marker id="arrow-dark" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#333"/>
+    </marker>
+    <marker id="arrow-red" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#b85450"/>
+    </marker>
+    <filter id="shadow" x="-2%" y="-2%" width="104%" height="104%">
+      <feDropShadow dx="1" dy="1" stdDeviation="1.5" flood-opacity="0.1"/>
+    </filter>
+  </defs>
+
+  <!-- ============================================================ -->
+  <!-- TITLE -->
+  <!-- ============================================================ -->
+  <text x="700" y="35" text-anchor="middle" font-size="20" font-weight="bold" fill="#1a1a2e">Sequential BATTing Algorithm</text>
+  <text x="700" y="58" text-anchor="middle" font-size="14" fill="#1a1a2e">(Bootstrapping and Aggregating of Thresholds from Trees)</text>
+  <text x="700" y="80" text-anchor="middle" font-size="12" fill="#555">
+    Stat Med. 2017;36(9):1414–1428.
+    <a class="ref-link" href="https://doi.org/10.1002/sim.7236" target="_blank">doi:10.1002/sim.7236</a>
+    — SubgrpID R Package
+  </text>
+
+  <!-- ============================================================ -->
+  <!-- PHASE 1: INPUT & SETUP -->
+  <!-- ============================================================ -->
+  <text x="90" y="118" font-size="13" font-weight="bold" fill="#16537e">PHASE 1: INPUT &amp; SETUP</text>
+
+  <!-- Input Data (document shape) -->
+  <g class="node" filter="url(#shadow)">
+    <path d="M105,150 h210 v100 c-35,15 -70,-15 -105,0 c-35,15 -70,-15 -105,0 z" fill="#dae8fc" stroke="#6c8ebf" stroke-width="1.5" rx="4"/>
+    <text x="210" y="178" text-anchor="middle" font-size="12" font-weight="bold" fill="#333">Input Data</text>
+    <text x="120" y="198" font-size="10.5" fill="#444">- Predictors (biomarkers)</text>
+    <text x="120" y="214" font-size="10.5" fill="#444">- Response variable</text>
+    <text x="120" y="230" font-size="10.5" fill="#444">- Treatment indicator</text>
+    <text x="120" y="246" font-size="10.5" fill="#444">- Censoring info (survival)</text>
+  </g>
+
+  <!-- Arrow: Input → Parameters -->
+  <line x1="315" y1="210" x2="375" y2="210" stroke="#666" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Parameters (document shape) -->
+  <g class="node" filter="url(#shadow)">
+    <path d="M375,150 h210 v100 c-35,15 -70,-15 -105,0 c-35,15 -70,-15 -105,0 z" fill="#dae8fc" stroke="#6c8ebf" stroke-width="1.5" rx="4"/>
+    <text x="480" y="178" text-anchor="middle" font-size="12" font-weight="bold" fill="#333">Parameters</text>
+    <text x="390" y="198" font-size="10.5" fill="#444">- n.boot (default = 50)</text>
+    <text x="390" y="214" font-size="10.5" fill="#444">- min.sigp.prcnt (default = 20%)</text>
+    <text x="390" y="230" font-size="10.5" fill="#444">- type: c / s / b</text>
+    <text x="390" y="246" font-size="10.5" fill="#444">- des.res: larger / smaller</text>
+  </g>
+
+  <!-- Arrow: Parameters → Pre-filtering -->
+  <line x1="585" y1="210" x2="645" y2="210" stroke="#666" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Pre-filtering -->
+  <g class="node" filter="url(#shadow)">
+    <rect x="645" y="150" width="220" height="120" rx="8" fill="#e1d5e7" stroke="#9673a6" stroke-width="1.5"/>
+    <text x="755" y="185" text-anchor="middle" font-size="12" font-weight="bold" fill="#333">Pre-filtering</text>
+    <text x="755" y="205" text-anchor="middle" font-size="10.5" fill="#666">(Optional)</text>
+    <text x="755" y="225" text-anchor="middle" font-size="10.5" fill="#444">Univariate / glmnet / CART</text>
+    <text x="755" y="245" text-anchor="middle" font-size="10.5" fill="#444">Reduce predictor dimensionality</text>
+  </g>
+
+  <!-- Legend -->
+  <g transform="translate(960,110)">
+    <rect x="0" y="0" width="380" height="155" rx="6" fill="#fafafa" stroke="#ccc" stroke-width="1"/>
+    <text x="15" y="22" font-size="12" font-weight="bold" fill="#333">Legend</text>
+    <!-- Row 1 left -->
+    <rect x="15" y="35" width="18" height="13" rx="3" fill="#dae8fc" stroke="#6c8ebf"/>
+    <text x="40" y="46" font-size="11" fill="#444">Input / Output Data</text>
+    <!-- Row 2 left -->
+    <rect x="15" y="58" width="18" height="13" rx="3" fill="#e1d5e7" stroke="#9673a6"/>
+    <text x="40" y="69" font-size="11" fill="#444">Pre-processing</text>
+    <!-- Row 3 left -->
+    <rect x="15" y="81" width="18" height="13" rx="3" fill="#fff2cc" stroke="#d6b656"/>
+    <text x="40" y="92" font-size="11" fill="#444">Sequential Loop Steps</text>
+    <!-- Row 4 left -->
+    <rect x="15" y="104" width="18" height="13" rx="3" fill="#d5e8d4" stroke="#82b366"/>
+    <text x="40" y="115" font-size="11" fill="#444">Bootstrap Steps (B1–B6)</text>
+    <!-- Row 1 right -->
+    <rect x="205" y="35" width="18" height="13" rx="3" fill="#ffe6cc" stroke="#d79b00"/>
+    <text x="230" y="46" font-size="11" fill="#444">Aggregation</text>
+    <!-- Row 2 right (diamond) -->
+    <polygon points="214,64 223,58 232,64 223,70" fill="#f8cecc" stroke="#b85450" stroke-width="1"/>
+    <text x="240" y="69" font-size="11" fill="#444">Decision / Stopping</text>
+    <!-- Row 3 right -->
+    <rect x="205" y="81" width="18" height="13" rx="3" fill="#f0f0f0" stroke="#999"/>
+    <text x="230" y="92" font-size="11" fill="#444">Final Output</text>
+    <!-- Row 4 right -->
+    <line x1="205" y1="110" x2="223" y2="110" stroke="#cc6600" stroke-width="2" stroke-dasharray="5,3"/>
+    <text x="230" y="115" font-size="11" fill="#444">Loop Back</text>
+  </g>
+
+  <!-- ============================================================ -->
+  <!-- PHASE 2: SEQUENTIAL ITERATION LOOP -->
+  <!-- ============================================================ -->
+  <text x="90" y="298" font-size="13" font-weight="bold" fill="#16537e">PHASE 2: SEQUENTIAL ITERATION LOOP</text>
+
+  <!-- Loop background -->
+  <rect x="70" y="310" width="1270" height="710" rx="10" fill="#f5f5f5" stroke="#b0b0b0" stroke-width="2" stroke-dasharray="8,4" opacity="0.35"/>
+
+  <!-- Arrow: Pre-filtering → Initialize -->
+  <path d="M755,270 L755,290 L640,290 L640,325" fill="none" stroke="#666" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Initialize -->
+  <g class="node" filter="url(#shadow)">
+    <rect x="550" y="325" width="180" height="55" rx="8" fill="#fff2cc" stroke="#d6b656" stroke-width="1.5"/>
+    <text x="640" y="349" text-anchor="middle" font-size="12" font-weight="bold" fill="#333">Initialize</text>
+    <text x="640" y="367" text-anchor="middle" font-size="11" fill="#444">Empty Signature (k = 1)</text>
+  </g>
+
+  <!-- Arrow: Initialize → Evaluate -->
+  <line x1="640" y1="380" x2="640" y2="415" stroke="#333" stroke-width="2" marker-end="url(#arrow-dark)"/>
+
+  <!-- Evaluate All Remaining -->
+  <g class="node" filter="url(#shadow)">
+    <rect x="550" y="415" width="180" height="55" rx="8" fill="#fff2cc" stroke="#d6b656" stroke-width="1.5"/>
+    <text x="640" y="439" text-anchor="middle" font-size="12" font-weight="bold" fill="#333">Evaluate All Remaining</text>
+    <text x="640" y="457" text-anchor="middle" font-size="11" fill="#444">Predictor Variables</text>
+  </g>
+
+  <!-- Arrow: Evaluate → Bootstrap B1 -->
+  <path d="M640,470 L640,495 L185,495 L185,530" fill="none" stroke="#333" stroke-width="2" marker-end="url(#arrow-dark)"/>
+
+  <!-- ============================================================ -->
+  <!-- BOOTSTRAP INNER LOOP -->
+  <!-- ============================================================ -->
+  <!-- Bootstrap background -->
+  <rect x="90" y="510" width="1230" height="290" rx="8" fill="#e6f3ff" stroke="#4a90d9" stroke-width="1" stroke-dasharray="6,3" opacity="0.5"/>
+  <text x="200" y="538" font-size="11" font-weight="bold" font-style="italic" fill="#2c5f8a">BOOTSTRAP THRESHOLD DISCOVERY (repeated n.boot = 50 times per variable)</text>
+
+  <!-- B1: Bootstrap Sample -->
+  <g class="node" filter="url(#shadow)">
+    <rect x="110" y="555" width="150" height="80" rx="8" fill="#d5e8d4" stroke="#82b366" stroke-width="1.5"/>
+    <text x="185" y="578" text-anchor="middle" font-size="11" font-weight="bold" fill="#333">B1</text>
+    <text x="185" y="595" text-anchor="middle" font-size="10.5" fill="#444">Draw Bootstrap</text>
+    <text x="185" y="610" text-anchor="middle" font-size="10.5" fill="#444">Sample from</text>
+    <text x="185" y="625" text-anchor="middle" font-size="10.5" fill="#444">Training Data</text>
+  </g>
+
+  <!-- Arrow B1 → B2 -->
+  <line x1="260" y1="595" x2="310" y2="595" stroke="#4a8c3f" stroke-width="1.2" marker-end="url(#arrow-green)"/>
+
+  <!-- B2: Fit Model -->
+  <g class="node" filter="url(#shadow)">
+    <rect x="310" y="555" width="160" height="80" rx="8" fill="#d5e8d4" stroke="#82b366" stroke-width="1.5"/>
+    <text x="390" y="578" text-anchor="middle" font-size="11" font-weight="bold" fill="#333">B2</text>
+    <text x="390" y="595" text-anchor="middle" font-size="10.5" fill="#444">Fit Statistical Model</text>
+    <text x="390" y="610" text-anchor="middle" font-size="10" fill="#666">Cox (survival)</text>
+    <text x="390" y="623" text-anchor="middle" font-size="10" fill="#666">GLM (binary) / Linear (cont.)</text>
+  </g>
+
+  <!-- Arrow B2 → B3 -->
+  <line x1="470" y1="595" x2="520" y2="595" stroke="#4a8c3f" stroke-width="1.2" marker-end="url(#arrow-green)"/>
+
+  <!-- B3: Extract Direction -->
+  <g class="node" filter="url(#shadow)">
+    <rect x="520" y="555" width="160" height="80" rx="8" fill="#d5e8d4" stroke="#82b366" stroke-width="1.5"/>
+    <text x="600" y="578" text-anchor="middle" font-size="11" font-weight="bold" fill="#333">B3</text>
+    <text x="600" y="595" text-anchor="middle" font-size="10.5" fill="#444">Extract Direction</text>
+    <text x="600" y="610" text-anchor="middle" font-size="10.5" fill="#444">from Interaction /</text>
+    <text x="600" y="625" text-anchor="middle" font-size="10.5" fill="#444">Main Effect Coefficients</text>
+  </g>
+
+  <!-- Arrow B3 → B4 -->
+  <line x1="680" y1="595" x2="730" y2="595" stroke="#4a8c3f" stroke-width="1.2" marker-end="url(#arrow-green)"/>
+
+  <!-- B4: Generate Cutoffs -->
+  <g class="node" filter="url(#shadow)">
+    <rect x="730" y="555" width="160" height="80" rx="8" fill="#d5e8d4" stroke="#82b366" stroke-width="1.5"/>
+    <text x="810" y="578" text-anchor="middle" font-size="11" font-weight="bold" fill="#333">B4</text>
+    <text x="810" y="595" text-anchor="middle" font-size="10.5" fill="#444">Generate Cutoff</text>
+    <text x="810" y="610" text-anchor="middle" font-size="10.5" fill="#444">Candidates</text>
+    <text x="810" y="625" text-anchor="middle" font-size="10" fill="#666">(5th–95th pctl, step = 5%)</text>
+  </g>
+
+  <!-- Arrow B4 → B5 -->
+  <line x1="890" y1="595" x2="940" y2="595" stroke="#4a8c3f" stroke-width="1.2" marker-end="url(#arrow-green)"/>
+
+  <!-- B5: Score Cutoffs -->
+  <g class="node" filter="url(#shadow)">
+    <rect x="940" y="555" width="160" height="80" rx="8" fill="#d5e8d4" stroke="#82b366" stroke-width="1.5"/>
+    <text x="1020" y="578" text-anchor="middle" font-size="11" font-weight="bold" fill="#333">B5</text>
+    <text x="1020" y="595" text-anchor="middle" font-size="10.5" fill="#444">Score Each Cutoff</text>
+    <text x="1020" y="610" text-anchor="middle" font-size="10.5" fill="#444">via p-values</text>
+    <text x="1020" y="625" text-anchor="middle" font-size="10" fill="#666">(interaction or main effect)</text>
+  </g>
+
+  <!-- Arrow B5 → B6 -->
+  <line x1="1100" y1="595" x2="1140" y2="595" stroke="#4a8c3f" stroke-width="1.2" marker-end="url(#arrow-green)"/>
+
+  <!-- B6: Select Best -->
+  <g class="node" filter="url(#shadow)">
+    <rect x="1140" y="555" width="155" height="80" rx="8" fill="#d5e8d4" stroke="#82b366" stroke-width="1.5"/>
+    <text x="1217" y="578" text-anchor="middle" font-size="11" font-weight="bold" fill="#333">B6</text>
+    <text x="1217" y="595" text-anchor="middle" font-size="10.5" fill="#444">Select Best Cutoff</text>
+    <text x="1217" y="610" text-anchor="middle" font-size="10.5" fill="#444">(lowest p-value)</text>
+    <text x="1217" y="625" text-anchor="middle" font-size="10.5" fill="#444">for this Bootstrap</text>
+  </g>
+
+  <!-- Loop-back arrow: B6 → B1 (dashed orange) -->
+  <path d="M1217,635 L1217,670 L185,670 L185,635" fill="none" stroke="#cc6600" stroke-width="2" stroke-dasharray="6,3" marker-end="url(#arrow-orange)"/>
+  <text x="700" y="688" text-anchor="middle" font-size="11" font-weight="bold" fill="#cc6600">Repeat n.boot times</text>
+
+  <!-- Arrow: B6 → Aggregate (exits bootstrap box) -->
+  <path d="M1217,635 L1217,720 L730,720 L730,730" fill="none" stroke="#333" stroke-width="2" marker-end="url(#arrow-dark)"/>
+
+  <!-- ============================================================ -->
+  <!-- AGGREGATION -->
+  <!-- ============================================================ -->
+
+  <!-- Aggregate Cutoffs -->
+  <g class="node" filter="url(#shadow)">
+    <rect x="490" y="730" width="250" height="75" rx="8" fill="#ffe6cc" stroke="#d79b00" stroke-width="1.5"/>
+    <text x="615" y="753" text-anchor="middle" font-size="12" font-weight="bold" fill="#333">Aggregate Cutoffs</text>
+    <text x="615" y="770" text-anchor="middle" font-size="11" fill="#444">Compute MEDIAN threshold</text>
+    <text x="615" y="787" text-anchor="middle" font-size="11" fill="#444">across all bootstrap samples</text>
+  </g>
+
+  <!-- Arrow: Aggregate → Select Variable -->
+  <line x1="740" y1="767" x2="800" y2="767" stroke="#333" stroke-width="2" marker-end="url(#arrow-dark)"/>
+
+  <!-- Select Variable -->
+  <g class="node" filter="url(#shadow)">
+    <rect x="800" y="730" width="200" height="75" rx="8" fill="#ffe6cc" stroke="#d79b00" stroke-width="1.5"/>
+    <text x="900" y="753" text-anchor="middle" font-size="12" font-weight="bold" fill="#333">Select Variable with</text>
+    <text x="900" y="770" text-anchor="middle" font-size="12" font-weight="bold" fill="#333">Most Significant</text>
+    <text x="900" y="787" text-anchor="middle" font-size="11" fill="#444">Relationship (lowest p)</text>
+  </g>
+
+  <!-- Arrow: Select Variable → Add Rule -->
+  <path d="M900,805 L900,830 L605,830 L605,850" fill="none" stroke="#333" stroke-width="2" marker-end="url(#arrow-dark)"/>
+
+  <!-- Add Rule to Signature -->
+  <g class="node" filter="url(#shadow)">
+    <rect x="480" y="850" width="250" height="55" rx="8" fill="#ffe6cc" stroke="#d79b00" stroke-width="1.5"/>
+    <text x="605" y="873" text-anchor="middle" font-size="12" font-weight="bold" fill="#333">Add New Rule to Signature</text>
+    <text x="605" y="891" text-anchor="middle" font-size="11" fill="#444">(variable, direction, threshold)</text>
+  </g>
+
+  <!-- Arrow: Add Rule → Stopping? -->
+  <line x1="605" y1="905" x2="605" y2="935" stroke="#333" stroke-width="2" marker-end="url(#arrow-dark)"/>
+
+  <!-- ============================================================ -->
+  <!-- STOPPING CRITERIA (Diamond) -->
+  <!-- ============================================================ -->
+  <g class="node">
+    <polygon points="605,935 680,990 605,1045 530,990" fill="#f8cecc" stroke="#b85450" stroke-width="1.5"/>
+    <text x="605" y="983" text-anchor="middle" font-size="12" font-weight="bold" fill="#333">Stopping</text>
+    <text x="605" y="1000" text-anchor="middle" font-size="12" font-weight="bold" fill="#333">Criteria Met?</text>
+  </g>
+
+  <!-- Stopping criteria note -->
+  <g filter="url(#shadow)">
+    <rect x="160" y="955" width="240" height="70" rx="6" fill="#f8cecc" stroke="#b85450" stroke-width="1" stroke-dasharray="4,2"/>
+    <text x="175" y="974" font-size="11" font-weight="bold" fill="#333">Stopping Criteria:</text>
+    <text x="175" y="991" font-size="10.5" fill="#444">1. LR test p-value &gt; 0.05</text>
+    <text x="175" y="1007" font-size="10.5" fill="#444">2. Sig+ pop &lt; min.sigp.prcnt (20%)</text>
+  </g>
+  <line x1="400" y1="990" x2="530" y2="990" stroke="#b85450" stroke-width="1" stroke-dasharray="4,2" marker-end="url(#arrow-red)"/>
+
+  <!-- No branch: loop back to Evaluate -->
+  <path d="M680,990 L1320,990 L1320,442 L730,442" fill="none" stroke="#333" stroke-width="2" marker-end="url(#arrow-dark)"/>
+  <text x="1328" y="720" font-size="12" font-weight="bold" fill="#333">No</text>
+  <text x="1328" y="736" font-size="11" fill="#444">(k = k+1)</text>
+
+  <!-- Yes branch: down to Final Signature -->
+  <line x1="605" y1="1045" x2="605" y2="1120" stroke="#333" stroke-width="2" marker-end="url(#arrow-dark)"/>
+  <text x="615" y="1085" font-size="12" font-weight="bold" fill="#333">Yes</text>
+
+  <!-- ============================================================ -->
+  <!-- PHASE 3: EVALUATION & OUTPUT -->
+  <!-- ============================================================ -->
+  <text x="90" y="1108" font-size="13" font-weight="bold" fill="#16537e">PHASE 3: EVALUATION &amp; OUTPUT</text>
+
+  <!-- Final Biomarker Signature -->
+  <g class="node" filter="url(#shadow)">
+    <rect x="420" y="1120" width="370" height="65" rx="8" fill="#d5e8d4" stroke="#82b366" stroke-width="1.5"/>
+    <text x="605" y="1145" text-anchor="middle" font-size="13" font-weight="bold" fill="#333">Final Biomarker Signature</text>
+    <text x="605" y="1165" text-anchor="middle" font-size="11" fill="#444">Matrix of rules: [variable | direction (&lt; or &gt;) | threshold | log-LL]</text>
+  </g>
+
+  <!-- Note box -->
+  <g filter="url(#shadow)">
+    <rect x="960" y="1120" width="310" height="55" rx="6" fill="#ffffc0" stroke="#c0c080" stroke-width="1"/>
+    <text x="975" y="1143" font-size="10.5" fill="#444"><tspan font-weight="bold">Predictive:</tspan> Treatment x Subgroup interaction p-values</text>
+    <text x="975" y="1160" font-size="10.5" fill="#444"><tspan font-weight="bold">Prognostic:</tspan> Main effect significance</text>
+  </g>
+
+  <!-- Arrows: Signature → 4 evaluation boxes -->
+  <path d="M605,1185 L605,1210 L215,1210 L215,1240" fill="none" stroke="#666" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <path d="M605,1185 L605,1210 L455,1210 L455,1240" fill="none" stroke="#666" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <path d="M605,1185 L605,1210 L695,1210 L695,1240" fill="none" stroke="#666" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <path d="M605,1185 L605,1210 L935,1210 L935,1240" fill="none" stroke="#666" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Training Set Evaluation -->
+  <g class="node" filter="url(#shadow)">
+    <rect x="130" y="1240" width="170" height="80" rx="8" fill="#dae8fc" stroke="#6c8ebf" stroke-width="1.5"/>
+    <text x="215" y="1262" text-anchor="middle" font-size="11" font-weight="bold" fill="#333">Training Set</text>
+    <text x="215" y="1278" text-anchor="middle" font-size="11" font-weight="bold" fill="#333">Evaluation</text>
+    <text x="215" y="1296" text-anchor="middle" font-size="10.5" fill="#444">Apply signature</text>
+    <text x="215" y="1310" text-anchor="middle" font-size="10.5" fill="#444">Compute subgroup stats</text>
+  </g>
+
+  <!-- Nested CV -->
+  <g class="node" filter="url(#shadow)">
+    <rect x="370" y="1240" width="170" height="80" rx="8" fill="#dae8fc" stroke="#6c8ebf" stroke-width="1.5"/>
+    <text x="455" y="1262" text-anchor="middle" font-size="11" font-weight="bold" fill="#333">Nested Cross-Validation</text>
+    <text x="455" y="1280" text-anchor="middle" font-size="10.5" fill="#444">Assess model</text>
+    <text x="455" y="1295" text-anchor="middle" font-size="10.5" fill="#444">stability and</text>
+    <text x="455" y="1310" text-anchor="middle" font-size="10.5" fill="#444">robustness</text>
+  </g>
+
+  <!-- Test Set Evaluation -->
+  <g class="node" filter="url(#shadow)">
+    <rect x="610" y="1240" width="170" height="80" rx="8" fill="#dae8fc" stroke="#6c8ebf" stroke-width="1.5"/>
+    <text x="695" y="1262" text-anchor="middle" font-size="11" font-weight="bold" fill="#333">Test Set</text>
+    <text x="695" y="1278" text-anchor="middle" font-size="11" font-weight="bold" fill="#333">Evaluation</text>
+    <text x="695" y="1296" text-anchor="middle" font-size="10.5" fill="#444">Apply signature</text>
+    <text x="695" y="1310" text-anchor="middle" font-size="10.5" fill="#444">to held-out data</text>
+  </g>
+
+  <!-- Interaction Plot -->
+  <g class="node" filter="url(#shadow)">
+    <rect x="850" y="1240" width="170" height="80" rx="8" fill="#dae8fc" stroke="#6c8ebf" stroke-width="1.5"/>
+    <text x="935" y="1262" text-anchor="middle" font-size="11" font-weight="bold" fill="#333">Interaction Plot</text>
+    <text x="935" y="1280" text-anchor="middle" font-size="10.5" fill="#444">Treatment vs Control</text>
+    <text x="935" y="1295" text-anchor="middle" font-size="10.5" fill="#444">across subgroups</text>
+  </g>
+
+  <!-- Arrows: 4 boxes → Results -->
+  <path d="M215,1320 L215,1350 L600,1350 L600,1370" fill="none" stroke="#666" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <path d="M455,1320 L455,1350 L600,1350 L600,1370" fill="none" stroke="#666" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <path d="M695,1320 L695,1350 L600,1350 L600,1370" fill="none" stroke="#666" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <path d="M935,1320 L935,1350 L600,1350 L600,1370" fill="none" stroke="#666" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Final Results -->
+  <g class="node" filter="url(#shadow)">
+    <rect x="300" y="1370" width="600" height="40" rx="8" fill="#f0f0f0" stroke="#999" stroke-width="1.5"/>
+    <text x="600" y="1395" text-anchor="middle" font-size="12" font-weight="bold" fill="#333">Results: p-values, subgroup ratios, group metrics, CSV/RData output</text>
+  </g>
+
+</svg>
+</body>
+</html>

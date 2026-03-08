@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sequential BATTing</title>
+
+  <!-- Bootstrap 5.3 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Bootstrap Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <!-- DataTables CSS -->
+  <link href="https://cdn.datatables.net/1.13.8/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+  <!-- Custom CSS -->
+  <link href="css/custom.css" rel="stylesheet">
+</head>
+<body>
+
+  <!-- ============================================================
+       NAVBAR
+       ============================================================ -->
+  <nav class="navbar navbar-expand-lg bg-body-tertiary border-bottom sticky-top">
+    <div class="container-fluid">
+      <a class="navbar-brand fw-bold" href="#">
+        <i class="bi bi-graph-up-arrow me-1"></i>Sequential BATTing
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="mainNav">
+        <ul class="navbar-nav me-auto" id="mainTabs" role="tablist">
+          <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="tab-data-btn" data-bs-toggle="tab"
+                    data-bs-target="#tab-data" type="button" role="tab" aria-selected="true">
+              <i class="bi bi-database me-1"></i>Data
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link tab-hidden" id="tab-config-btn" data-bs-toggle="tab"
+                    data-bs-target="#tab-config" type="button" role="tab">
+              <i class="bi bi-gear me-1"></i>Configuration
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link tab-hidden" id="tab-run-btn" data-bs-toggle="tab"
+                    data-bs-target="#tab-run" type="button" role="tab">
+              <i class="bi bi-play-circle me-1"></i>Run
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link tab-hidden" id="tab-results-btn" data-bs-toggle="tab"
+                    data-bs-target="#tab-results" type="button" role="tab">
+              <i class="bi bi-bar-chart-line me-1"></i>Results
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link tab-hidden" id="tab-report-btn" data-bs-toggle="tab"
+                    data-bs-target="#tab-report" type="button" role="tab">
+              <i class="bi bi-file-earmark-text me-1"></i>Report
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link tab-hidden" id="tab-deepdives-btn" data-bs-toggle="tab"
+                    data-bs-target="#tab-deepdives" type="button" role="tab">
+              <i class="bi bi-search me-1"></i>Deep Dives
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="tab-algorithm-btn" data-bs-toggle="tab"
+                    data-bs-target="#tab-algorithm" type="button" role="tab">
+              <i class="bi bi-diagram-3 me-1"></i>Algorithm
+            </button>
+          </li>
+        </ul>
+        <!-- Dark mode toggle -->
+        <div class="d-flex align-items-center">
+          <button class="btn btn-sm btn-outline-secondary" id="darkModeToggle" type="button"
+                  title="Toggle dark mode">
+            <i class="bi bi-moon-stars" id="darkModeIcon"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ============================================================
+       TAB CONTENT
+       ============================================================ -->
+  <div class="container-fluid px-3 px-lg-4">
+    <div class="tab-content" id="mainTabContent">
+
+      <!-- ==================== DATA TAB ==================== -->
+      <div class="tab-pane fade show active" id="tab-data" role="tabpanel">
+        <div id="data-module">
+          <!-- Populated by js/ui/data-module.js -->
+          <div class="placeholder-content">
+            <i class="bi bi-cloud-arrow-up"></i>
+            <h5>Data Module</h5>
+            <p class="text-muted">Upload a dataset or generate simulated data to begin.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== CONFIGURATION TAB ==================== -->
+      <div class="tab-pane fade" id="tab-config" role="tabpanel">
+        <div id="config-module">
+          <!-- Populated by js/ui/config-module.js -->
+          <div class="placeholder-content">
+            <i class="bi bi-gear"></i>
+            <h5>Configuration</h5>
+            <p class="text-muted">Configure analysis parameters.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== RUN TAB ==================== -->
+      <div class="tab-pane fade" id="tab-run" role="tabpanel">
+        <div id="run-module">
+          <!-- Populated by js/ui/run-module.js -->
+          <div class="placeholder-content">
+            <i class="bi bi-play-circle"></i>
+            <h5>Run Analysis</h5>
+            <p class="text-muted">Execute the Sequential BATTing algorithm.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== RESULTS TAB ==================== -->
+      <div class="tab-pane fade" id="tab-results" role="tabpanel">
+        <div id="results-module">
+          <!-- Populated by js/ui/results-module.js -->
+          <div class="placeholder-content">
+            <i class="bi bi-bar-chart-line"></i>
+            <h5>Results</h5>
+            <p class="text-muted">Analysis results will appear here.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== REPORT TAB ==================== -->
+      <div class="tab-pane fade" id="tab-report" role="tabpanel">
+        <div id="report-module">
+          <!-- Populated by js/ui/report-module.js -->
+          <div class="placeholder-content">
+            <i class="bi bi-file-earmark-text"></i>
+            <h5>Report & Export</h5>
+            <p class="text-muted">Download reports and data exports.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== DEEP DIVES TAB (stub) ==================== -->
+      <div class="tab-pane fade" id="tab-deepdives" role="tabpanel">
+        <div class="placeholder-content">
+          <i class="bi bi-search"></i>
+          <h4>Deep Dives &mdash; Coming Soon</h4>
+          <p class="text-muted">
+            Per-biomarker deep dives with waterfall plots, Kaplan-Meier curves,<br>
+            forest plots, and grouped bar charts.
+          </p>
+        </div>
+      </div>
+
+      <!-- ==================== ALGORITHM TAB ==================== -->
+      <div class="tab-pane fade" id="tab-algorithm" role="tabpanel">
+        <iframe src="assets/algorithm-diagram.html" class="algorithm-frame"
+                title="Sequential BATTing Algorithm Diagram"></iframe>
+      </div>
+
+    </div><!-- /tab-content -->
+  </div><!-- /container -->
+
+  <!-- ============================================================
+       SCRIPTS
+       ============================================================ -->
+  <!-- jQuery (required by DataTables) -->
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <!-- Bootstrap 5.3 JS Bundle -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- DataTables -->
+  <script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
+  <script src="https://cdn.datatables.net/1.13.8/js/dataTables.bootstrap5.min.js"></script>
+  <!-- Plotly.js (basic bundle) -->
+  <script src="https://cdn.plot.ly/plotly-2.35.0.min.js" charset="utf-8"></script>
+  <!-- PapaParse (CSV) -->
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <!-- SheetJS (Excel) -->
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+  <!-- SortableJS -->
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.3/Sortable.min.js"></script>
+  <!-- jStat (statistical distributions) -->
+  <script src="https://cdn.jsdelivr.net/npm/jstat@1.9.6/dist/jstat.min.js"></script>
+
+  <!-- SB namespace: stats (dependency order) -->
+  <script src="js/stats/matrix.js"></script>
+  <script src="js/stats/distributions.js"></script>
+  <script src="js/stats/linear-regression.js"></script>
+  <script src="js/stats/logistic-regression.js"></script>
+  <script src="js/stats/cox-regression.js"></script>
+  <script src="js/stats/survival.js"></script>
+
+  <!-- SB namespace: algorithm (dependency order) -->
+  <script src="js/algorithm/utils.js"></script>
+  <script src="js/algorithm/prediction.js"></script>
+  <script src="js/algorithm/batting.js"></script>
+  <script src="js/algorithm/sequential-batting.js"></script>
+  <script src="js/algorithm/evaluation.js"></script>
+  <script src="js/algorithm/cross-validation.js"></script>
+  <script src="js/algorithm/prefilter.js"></script>
+  <script src="js/algorithm/data-gen.js"></script>
+
+  <!-- App core -->
+  <script src="js/app.js"></script>
+
+  <!-- UI modules -->
+  <script src="js/ui/data-module.js"></script>
+  <script src="js/ui/config-module.js"></script>
+  <script src="js/ui/run-module.js"></script>
+  <script src="js/ui/results-module.js"></script>
+  <script src="js/ui/report-module.js"></script>
+</body>
+</html>
